@@ -34,7 +34,7 @@ export class MyToken extends DeployableOP_20 {
 
     @method(
         {
-            name: 'address',
+            name: 'address',tb1pxr58jx32z94w4q4c3m5dq4glj2um933cjhaytm9dzpv2fv82z76qff6a0p
             type: ABIDataTypes.ADDRESS,
         },
         {
