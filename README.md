@@ -266,3 +266,15 @@ For more detailed explanations on specific topics related to the OPNet runtime, 
 ## License
 
 This project is licensed under the MIT License. View the full license [here](LICENSE.md).
+
+## Fork review and reproducible build
+
+This fork is based on the upstream [btc-vision/OP_20 template](https://github.com/btc-vision/OP_20) and retains its license and attribution. These repairs target this fork's `patch-1` branch.
+
+Use Node.js 24 and `npm ci`, then `npm run build`. The lockfile and pinned runtime/compiler/visitor combination prevent incompatible compiler AST versions from being installed. The output is `build/MyToken.wasm`; generated build/ABI files are ignored. CI builds the contract and checks that the result is valid WebAssembly. This is not an OP_NET VM execution test or deployment audit.
+
+The accidental address fragment in ABI metadata was removed. Batch minting now uses the runtime `_mint` checks, including the maximum supply, instead of directly increasing supply and balances. This example initially mints the entire maximum supply to the deployer; further single or batch mints are expected to fail while the cap is reached. Customize allocation deliberately before deployment. No wallet, deployment, real token transfer, or airdrop claim was performed during this review.
+
+### Remaining dependency risk
+
+`npm audit` currently reports nine high-severity dependency findings in this legacy toolchain, including transitive template/TOML/OP_NET packages. A compatible non-breaking audit repair did not eliminate them. The suggested transformer upgrade is a major version change and needs a separate SDK migration and VM behavior tests. The pinned build is reproducible, but the toolchain is not represented as security-clean or production-ready. Run it only against reviewed local source; do not use untrusted build inputs or wallet credentials. This limitation is the reason the repair PR is a draft.

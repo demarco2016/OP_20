@@ -8,7 +8,6 @@ import {
     Calldata,
     DeployableOP_20,
     OP20InitParameters,
-    SafeMath,
 } from '@btc-vision/btc-runtime/runtime';
 
 @final
@@ -34,7 +33,7 @@ export class MyToken extends DeployableOP_20 {
 
     @method(
         {
-            name: 'address',tb1pxr58jx32z94w4q4c3m5dq4glj2um933cjhaytm9dzpv2fv82z76qff6a0p
+            name: 'address',
             type: ABIDataTypes.ADDRESS,
         },
         {
@@ -46,7 +45,6 @@ export class MyToken extends DeployableOP_20 {
         name: 'success',
         type: ABIDataTypes.BOOL,
     })
-    @emit('Mint')
     public mint(calldata: Calldata): BytesWriter {
         this.onlyDeployer(Blockchain.tx.sender);
 
@@ -71,33 +69,18 @@ export class MyToken extends DeployableOP_20 {
         name: 'success',
         type: ABIDataTypes.BOOL,
     })
-    @emit('Mint')
     public airdrop(calldata: Calldata): BytesWriter {
         this.onlyDeployer(Blockchain.tx.sender);
 
         const addressAndAmount: AddressMap<u256> = calldata.readAddressMapU256();
         const addresses: Address[] = addressAndAmount.keys();
 
-        let totalAirdropped: u256 = u256.Zero;
-
+        // Use the runtime mint path so zero-address and maximum-supply checks
+        // apply equally to single and batch minting.
         for (let i: i32 = 0; i < addresses.length; i++) {
             const address = addresses[i];
-            const amount = addressAndAmount.get(address);
-
-            const currentBalance: u256 = this.balanceOfMap.get(address);
-
-            if (currentBalance) {
-                this.balanceOfMap.set(address, SafeMath.add(currentBalance, amount));
-            } else {
-                this.balanceOfMap.set(address, amount);
-            }
-
-            totalAirdropped = SafeMath.add(totalAirdropped, amount);
-
-            this.createMintEvent(address, amount);
+            this._mint(address, addressAndAmount.get(address));
         }
-
-        this._totalSupply.set(SafeMath.add(this._totalSupply.value, totalAirdropped));
 
         const writer: BytesWriter = new BytesWriter(BOOLEAN_BYTE_LENGTH);
         writer.writeBoolean(true);
